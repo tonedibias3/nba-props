@@ -4,42 +4,64 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hardwood Edge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0d1117; --card:#161b22; --line:#2a313c; --text:#e6edf3; --mute:#8b949e; --acc:#f5a623; --up:#3fb950; --down:#f85149; }
-  [data-theme="light"] { --bg:#f6f7f9; --card:#fff; --line:#d8dde3; --text:#1b1f24; --mute:#667085; --acc:#c77700; --up:#1a7f37; --down:#cf222e; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif; padding-bottom:40px; }
-  header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:10px 14px 8px; padding-top:calc(10px + env(safe-area-inset-top)); }
+  :root {
+    --bg:#0a0e14; --card:#131a24; --line:#243040; --text:#eef3f8; --mute:#8d9bb0;
+    --acc:#ff9f1c; --up:#2ee66b; --down:#ff5d5d;
+    --c-pra:#a78bfa; --c-pts:#ff9f1c; --c-reb:#38bdf8; --c-ast:#34d399; --c-pr:#f472b6; --c-pa:#fb7185; --c-ra:#2dd4bf;
+    --disp:"Barlow Condensed","Arial Narrow",system-ui,sans-serif; --body:"Barlow",system-ui,sans-serif;
+  }
+  [data-theme="light"] {
+    --bg:#eef2f7; --card:#ffffff; --line:#d2dbe7; --text:#14202e; --mute:#5c6b80;
+    --acc:#d97706; --up:#15803d; --down:#dc2626;
+    --c-pra:#7c3aed; --c-pts:#d97706; --c-reb:#0284c7; --c-ast:#059669; --c-pr:#db2777; --c-pa:#e11d48; --c-ra:#0d9488;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.35 var(--body); padding-bottom:40px; }
+  header { background:linear-gradient(135deg, color-mix(in srgb, var(--acc) 24%, var(--bg)), var(--bg) 70%); border-bottom:1px solid var(--line); padding:10px 12px 8px; padding-top:calc(10px + env(safe-area-inset-top)); }
   .top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  h1 { font-size:18px; margin:0; letter-spacing:.3px; }
+  h1 { font:800 26px/1 var(--disp); margin:0; letter-spacing:1px; text-transform:uppercase; }
   h1 span { color:var(--acc); }
-  .sub { color:var(--mute); font-size:12px; }
-  button.theme { background:none; border:1px solid var(--line); color:var(--text); border-radius:8px; padding:5px 9px; font-size:13px; }
-  .chips { display:flex; gap:6px; overflow-x:auto; padding:8px 0 2px; scrollbar-width:none; }
+  .sub { color:var(--mute); font-size:12px; margin-top:2px; }
+  button { font-family:inherit; }
+  button.theme { background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:6px 11px; font:600 13px var(--body); }
+  .row2 { display:flex; gap:8px; margin-top:10px; }
+  input[type=search] { flex:1; min-width:0; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:10px 12px; font:16px var(--body); }
+  select { background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:9px; font:15px var(--body); }
+  .chips { display:flex; gap:7px; overflow-x:auto; padding:9px 0 3px; scrollbar-width:none; }
   .chips::-webkit-scrollbar { display:none; }
-  .chip { flex:0 0 auto; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:999px; padding:6px 13px; font-size:14px; font-weight:600; }
-  .chip.on { background:var(--acc); border-color:var(--acc); color:#111; }
-  .chip.g { border-radius:10px; padding:5px 11px; text-align:center; line-height:1.2; font-size:13px; }
-  .chip.g small { display:block; font-weight:400; font-size:11px; opacity:.8; }
-  .row2 { display:flex; gap:8px; margin-top:6px; }
-  input[type=search] { flex:1; min-width:0; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px 11px; font-size:16px; }
-  select { background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px; font-size:15px; }
+  .chip { flex:0 0 auto; border:1.5px solid var(--c, var(--line)); background:var(--card); color:var(--text); border-radius:999px; padding:6px 14px; font:700 15px var(--disp); letter-spacing:.5px; }
+  .chip.on { background:var(--c, var(--acc)); color:#0b0f14; }
+  .chip.g { position:relative; border-radius:10px; border:1px solid var(--line); padding:9px 12px 5px; text-align:center; line-height:1.15; overflow:hidden; font-size:15px; }
+  .chip.g::before { content:""; position:absolute; left:0; right:0; top:0; height:4px; background:linear-gradient(90deg, var(--a) 50%, var(--b) 50%); }
+  .chip.g small { display:block; font:500 11px var(--body); opacity:.75; letter-spacing:0; }
+  .chip.g.on { background:var(--card); border-color:var(--acc); box-shadow:0 0 0 1.5px var(--acc) inset; color:var(--text); }
+  .chip.t { border-radius:8px; padding:4px 13px; font-size:14px; }
+  .chip.t.on { color:var(--tt, #fff); }
+  #tchips { padding-top:4px; }
+  .statbar { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:0 12px; }
+  .head, .p { display:grid; grid-template-columns:34px 1fr 58px 42px 42px; gap:6px; align-items:center; }
+  .head { color:var(--mute); font:600 11px var(--body); text-transform:uppercase; padding:3px 0 5px; margin:0 -12px; padding-left:23px; padding-right:21px; }
+  .head div:nth-child(n+3), .p .n { text-align:right; }
   main { padding:8px 10px; max-width:760px; margin:0 auto; }
-  .games { color:var(--mute); font-size:12px; padding:4px 4px 8px; }
-  .head, .p { display:grid; grid-template-columns: 1fr 52px 56px 50px 50px; gap:4px; align-items:center; }
-  .head { color:var(--mute); font-size:11px; text-transform:uppercase; padding:4px 10px; }
-  .head div:not(:first-child), .p .n { text-align:right; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; margin-bottom:6px; overflow:hidden; }
-  .p { padding:9px 10px; cursor:pointer; }
-  .nm { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .meta { color:var(--mute); font-size:12px; font-weight:400; }
-  .proj { color:var(--acc); font-weight:800; font-size:17px; }
-  .n { font-variant-numeric:tabular-nums; }
-  .det { display:none; padding:2px 10px 10px; border-top:1px solid var(--line); }
+  .card { background:var(--card); border:1px solid var(--line); border-left:5px solid var(--tc); border-radius:10px; margin-bottom:6px; overflow:hidden; }
+  .p { padding:8px 10px 8px 8px; cursor:pointer; }
+  .badge { width:34px; height:34px; border-radius:8px; background:var(--tc); color:var(--tt); display:flex; align-items:center; justify-content:center; font:800 12px var(--disp); letter-spacing:.3px; border:0; padding:0; }
+  .nm { font:700 18px/1.1 var(--disp); letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta { color:var(--mute); font-size:12px; }
+  .n { font-variant-numeric:tabular-nums; font-weight:500; }
+  .proj { color:var(--sc); font:800 24px/1 var(--disp); }
+  .dl { display:block; font:600 11px var(--body); }
+  .dl.u { color:var(--up); } .dl.d { color:var(--down); }
+  .det { display:none; padding:2px 12px 10px; border-top:1px solid var(--line); }
   .card.open .det { display:block; }
   table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; font-variant-numeric:tabular-nums; }
-  th { color:var(--mute); font-weight:500; text-align:right; padding:3px 4px; font-size:11px; text-transform:uppercase; }
-  td { text-align:right; padding:4px; border-top:1px solid var(--line); }
+  th { color:var(--mute); font-weight:600; text-align:right; padding:3px 4px; font-size:11px; text-transform:uppercase; }
+  th.sel { color:var(--sc); }
+  td { text-align:right; padding:5px 4px; border-top:1px solid var(--line); }
   th:first-child, td:first-child { text-align:left; }
   .hi { color:var(--up); font-weight:700; }
   .lo { color:var(--down); }
@@ -53,23 +75,32 @@
     <div><h1>Hardwood <span>Edge</span></h1><div class="sub" id="upd">Loading...</div></div>
     <button class="theme" id="theme">Light</button>
   </div>
-  <div class="chips" id="gchips"></div>
-  <div class="chips" id="chips"></div>
   <div class="row2">
     <input type="search" id="q" placeholder="Search player or team">
     <select id="scope"><option value="today">Playing today</option><option value="all">All players</option></select>
   </div>
+  <div class="chips" id="gchips"></div>
+  <div class="chips" id="tchips"></div>
+  <div class="sub" id="games"></div>
 </header>
+<div class="statbar">
+  <div class="chips" id="chips"></div>
+  <div class="head"><div></div><div>Player</div><div id="hProj">Proj</div><div>L5</div><div>L10</div></div>
+</div>
 <main>
-  <div class="games" id="games"></div>
-  <div class="head"><div>Player</div><div>Min</div><div id="hProj">Proj</div><div>L5</div><div>L10</div></div>
   <div id="list"></div>
-  <div class="foot">Projection = recent games weighted toward the newest, nudged by today's opponent. Check injuries yourself.</div>
+  <div class="foot">Projection = recent games weighted toward the newest, nudged by today's opponent. Arrow shows projection vs last 10 average. Check injuries yourself.</div>
 </main>
 <script>
 const STATS = [["pra","PRA"],["pts","PTS"],["reb","REB"],["ast","AST"],["pr","P+R"],["pa","P+A"],["ra","R+A"]];
-let DATA = null, stat = "pra", game = "all";
+const TEAM = {ATL:"#E03A3E",BOS:"#1F9D55",BKN:"#6B7380",CHA:"#00A3B4",CHI:"#CE1141",CLE:"#A31F4B",DAL:"#0A7BD0",DEN:"#FEC524",DET:"#D6203D",GS:"#1D6FD1",HOU:"#CE1141",IND:"#FDBB30",LAC:"#D6203D",LAL:"#7A45B8",MEM:"#5D76A9",MIA:"#D6264F",MIL:"#2E8B57",MIN:"#2F87C7",NO:"#B5223B",NY:"#F58426",OKC:"#0A8FD6",ORL:"#0A8FD6",PHI:"#1673C4",PHX:"#E56020",POR:"#E03A3E",SAC:"#7B4FB5",SA:"#8A8D8F",TOR:"#CE1141",UTAH:"#F9A01B",WSH:"#E31837"};
+const ALIAS = {GSW:"GS",NYK:"NY",NOP:"NO",SAS:"SA",WAS:"WSH",UTA:"UTAH",PHO:"PHX",BRK:"BKN",CHO:"CHA"};
+const tcol = t => TEAM[t] || TEAM[ALIAS[t]] || "#64748b";
+const ttxt = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? "#10151c" : "#ffffff"; };
+let DATA = null, stat = "pra", game = "all", team = null;
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sc = k => `var(--c-${k})`;
 
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} }
 function setTheme(t) { document.documentElement.dataset.theme = t; $("theme").textContent = t === "dark" ? "Light" : "Dark"; store("he-theme", t); }
@@ -78,51 +109,77 @@ $("theme").onclick = () => setTheme(document.documentElement.dataset.theme === "
 stat = store("he-stat") || "pra";
 $("scope").value = store("he-scope") || "today";
 
-function chips() {
-  $("chips").innerHTML = STATS.map(([k, l]) => `<button class="chip ${k === stat ? "on" : ""}" data-k="${k}">${l}</button>`).join("");
-  $("chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { stat = b.dataset.k; store("he-stat", stat); chips(); render(); });
+function statChips() {
+  $("chips").innerHTML = STATS.map(([k, l]) => `<button class="chip ${k === stat ? "on" : ""}" style="--c:${sc(k)}" data-k="${k}">${l}</button>`).join("");
+  $("chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { stat = b.dataset.k; store("he-stat", stat); statChips(); render(); });
 }
+
 function gameChips() {
-  const gs = DATA.games_today.slice().sort((a, b) => new Date(a.time) - new Date(b.time));
-  DATA.games_today = gs;
+  const gs = DATA.games_today;
   const tm = g => { const d = new Date(g.time); return isNaN(d) ? "" : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); };
   $("gchips").style.display = gs.length ? "flex" : "none";
-  $("gchips").innerHTML = `<button class="chip g ${game === "all" ? "on" : ""}" data-g="all">All games<small>${gs.length} today</small></button>` +
-    gs.map((g, i) => `<button class="chip g ${game == i ? "on" : ""}" data-g="${i}">${esc(g.away)} @ ${esc(g.home)}<small>${tm(g)}</small></button>`).join("");
-  $("gchips").querySelectorAll(".chip").forEach(b => b.onclick = () => { game = b.dataset.g === "all" ? "all" : +b.dataset.g; gameChips(); render(); });
+  $("gchips").innerHTML = `<button class="chip g ${game === "all" ? "on" : ""}" style="--a:var(--acc);--b:var(--acc)" data-g="all">All games<small>${gs.length} today</small></button>` +
+    gs.map((g, i) => `<button class="chip g ${game === i ? "on" : ""}" style="--a:${tcol(g.away)};--b:${tcol(g.home)}" data-g="${i}">${esc(g.away)} @ ${esc(g.home)}<small>${tm(g)}</small></button>`).join("");
+  $("gchips").querySelectorAll(".chip").forEach(b => b.onclick = () => { game = b.dataset.g === "all" ? "all" : +b.dataset.g; team = null; gameChips(); teamChips(); render(); });
 }
+
+function teamChips() {
+  const el = $("tchips");
+  const tchip = (code, on, label) => { const c = code ? tcol(code) : "var(--acc)"; const tt = code ? ttxt(tcol(code)) : "#10151c"; return `<button class="chip t ${on ? "on" : ""}" style="--c:${c};--tt:${tt}" data-t="${code || ""}">${label}</button>`; };
+  if (game !== "all") {
+    const g = DATA.games_today[game];
+    el.style.display = "flex";
+    el.innerHTML = tchip("", !team, "Both teams") + tchip(g.away, team === g.away, esc(g.away)) + tchip(g.home, team === g.home, esc(g.home));
+  } else if (team) {
+    el.style.display = "flex";
+    el.innerHTML = tchip(team, true, esc(team) + " &#10005;");
+  } else { el.style.display = "none"; el.innerHTML = ""; return; }
+  el.querySelectorAll(".chip").forEach(b => b.onclick = () => { team = b.dataset.t && b.dataset.t !== team ? b.dataset.t : null; teamChips(); render(); });
+}
+
 const val = (g, k) => k === "pr" ? g.pts + g.reb : k === "pa" ? g.pts + g.ast : k === "ra" ? g.reb + g.ast : k === "pra" ? g.pts + g.reb + g.ast : g[k];
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function render() {
   if (!DATA) return;
   const q = $("q").value.trim().toLowerCase(), scope = $("scope").value;
   store("he-scope", scope);
-  $("hProj").textContent = "Proj " + STATS.find(s => s[0] === stat)[1];
+  const label = STATS.find(s => s[0] === stat)[1];
+  $("hProj").textContent = "Proj";
   const gm = game === "all" ? null : DATA.games_today[game];
-  let ps = DATA.players.filter(p => (!gm || p.team === gm.home || p.team === gm.away) && (scope === "all" || p.opp) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
+  let ps = DATA.players.filter(p =>
+    (!gm || p.team === gm.home || p.team === gm.away) && (!team || p.team === team) &&
+    (scope === "all" || p.opp) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
   ps = ps.slice().sort((a, b) => b.proj[stat] - a.proj[stat]).slice(0, 150);
   if (!ps.length) { $("list").innerHTML = `<div class="empty">${scope === "today" ? "No matching players on today's slate. Try All players." : "No players found."}</div>`; return; }
   $("list").innerHTML = ps.map((p, i) => {
-    const opp = p.opp ? `${p.home ? "vs" : "@"} ${p.opp}` : "no game";
-    const rows = p.log.map(g => { const v = val(g, stat); return `<tr><td>${g.d} ${g.h ? "vs" : "@"} ${g.opp}</td><td>${g.min}</td><td>${g.pts}</td><td>${g.reb}</td><td>${g.ast}</td><td class="${v >= p.proj[stat] ? "hi" : "lo"}">${v}</td></tr>`; }).join("");
-    return `<div class="card" data-i="${i}"><div class="p"><div><div class="nm">${esc(p.name)}</div><div class="meta">${esc(p.team)} ${esc(p.pos)} · ${opp}</div></div><div class="n">${p.min}</div><div class="n proj">${p.proj[stat]}</div><div class="n">${p.l5[stat]}</div><div class="n">${p.l10[stat]}</div></div>
+    const c = tcol(p.team), opp = p.opp ? `${p.home ? "vs" : "@"} ${esc(p.opp)}` : "no game";
+    const d = p.proj[stat] - p.l10[stat];
+    const dl = Math.abs(d) >= 0.3 ? `<span class="dl ${d > 0 ? "u" : "d"}">${d > 0 ? "&#9650;" : "&#9660;"} ${Math.abs(d).toFixed(1)}</span>` : "";
+    const rows = p.log.map(g => { const v = val(g, stat); return `<tr><td>${g.d} ${g.h ? "vs" : "@"} ${esc(g.opp)}</td><td>${g.min}</td><td>${g.pts}</td><td>${g.reb}</td><td>${g.ast}</td><td class="${v >= p.proj[stat] ? "hi" : "lo"}">${v}</td></tr>`; }).join("");
+    return `<div class="card" style="--tc:${c};--tt:${ttxt(c)};--sc:${sc(stat)}"><div class="p"><button class="badge" data-t="${esc(p.team)}">${esc(p.team)}</button><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="meta">${esc(p.pos)} · ${opp} · ${p.min} min</div></div><div class="n"><span class="proj">${p.proj[stat]}</span>${dl}</div><div class="n">${p.l5[stat]}</div><div class="n">${p.l10[stat]}</div></div>
     <div class="det"><div class="meta">Season avg ${p.szn[stat]} over ${p.gp} games. Last 10 (green = at or over projection):</div>
-    <table><tr><th>Game</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th>${STATS.find(s => s[0] === stat)[1]}</th></tr>${rows}</table></div></div>`;
+    <table><tr><th>Game</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th class="sel">${label}</th></tr>${rows}</table></div></div>`;
   }).join("");
   $("list").querySelectorAll(".p").forEach(el => el.onclick = () => el.parentElement.classList.toggle("open"));
+  $("list").querySelectorAll(".badge").forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    team = team === b.dataset.t ? null : b.dataset.t;
+    if (gm && team && team !== gm.home && team !== gm.away) game = "all";
+    gameChips(); teamChips(); render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 }
 
 fetch("data/app.json?" + Date.now()).then(r => r.json()).then(d => {
+  d.games_today.sort((a, b) => new Date(a.time) - new Date(b.time));
   DATA = d;
   const t = new Date(d.updated);
   $("upd").textContent = "Updated " + t.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   $("games").textContent = d.games_today.length ? "" : "No games on today's slate";
-  gameChips();
-  render();
+  gameChips(); teamChips(); render();
 }).catch(() => { $("upd").textContent = "No data yet"; $("list").innerHTML = '<div class="empty">No data file found. Run the daily update from the Actions tab.</div>'; });
 
-chips();
+statChips();
 $("q").oninput = render;
 $("scope").onchange = render;
 </script>
