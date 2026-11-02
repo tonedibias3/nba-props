@@ -19,6 +19,8 @@
   .chips::-webkit-scrollbar { display:none; }
   .chip { flex:0 0 auto; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:999px; padding:6px 13px; font-size:14px; font-weight:600; }
   .chip.on { background:var(--acc); border-color:var(--acc); color:#111; }
+  .chip.g { border-radius:10px; padding:5px 11px; text-align:center; line-height:1.2; font-size:13px; }
+  .chip.g small { display:block; font-weight:400; font-size:11px; opacity:.8; }
   .row2 { display:flex; gap:8px; margin-top:6px; }
   input[type=search] { flex:1; min-width:0; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px 11px; font-size:16px; }
   select { background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px; font-size:15px; }
@@ -51,6 +53,7 @@
     <div><h1>Hardwood <span>Edge</span></h1><div class="sub" id="upd">Loading...</div></div>
     <button class="theme" id="theme">Light</button>
   </div>
+  <div class="chips" id="gchips"></div>
   <div class="chips" id="chips"></div>
   <div class="row2">
     <input type="search" id="q" placeholder="Search player or team">
@@ -65,7 +68,7 @@
 </main>
 <script>
 const STATS = [["pra","PRA"],["pts","PTS"],["reb","REB"],["ast","AST"],["pr","P+R"],["pa","P+A"],["ra","R+A"]];
-let DATA = null, stat = "pra";
+let DATA = null, stat = "pra", game = "all";
 const $ = id => document.getElementById(id);
 
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} }
@@ -79,6 +82,15 @@ function chips() {
   $("chips").innerHTML = STATS.map(([k, l]) => `<button class="chip ${k === stat ? "on" : ""}" data-k="${k}">${l}</button>`).join("");
   $("chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { stat = b.dataset.k; store("he-stat", stat); chips(); render(); });
 }
+function gameChips() {
+  const gs = DATA.games_today.slice().sort((a, b) => new Date(a.time) - new Date(b.time));
+  DATA.games_today = gs;
+  const tm = g => { const d = new Date(g.time); return isNaN(d) ? "" : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); };
+  $("gchips").style.display = gs.length ? "flex" : "none";
+  $("gchips").innerHTML = `<button class="chip g ${game === "all" ? "on" : ""}" data-g="all">All games<small>${gs.length} today</small></button>` +
+    gs.map((g, i) => `<button class="chip g ${game == i ? "on" : ""}" data-g="${i}">${esc(g.away)} @ ${esc(g.home)}<small>${tm(g)}</small></button>`).join("");
+  $("gchips").querySelectorAll(".chip").forEach(b => b.onclick = () => { game = b.dataset.g === "all" ? "all" : +b.dataset.g; gameChips(); render(); });
+}
 const val = (g, k) => k === "pr" ? g.pts + g.reb : k === "pa" ? g.pts + g.ast : k === "ra" ? g.reb + g.ast : k === "pra" ? g.pts + g.reb + g.ast : g[k];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -87,7 +99,8 @@ function render() {
   const q = $("q").value.trim().toLowerCase(), scope = $("scope").value;
   store("he-scope", scope);
   $("hProj").textContent = "Proj " + STATS.find(s => s[0] === stat)[1];
-  let ps = DATA.players.filter(p => (scope === "all" || p.opp) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
+  const gm = game === "all" ? null : DATA.games_today[game];
+  let ps = DATA.players.filter(p => (!gm || p.team === gm.home || p.team === gm.away) && (scope === "all" || p.opp) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
   ps = ps.slice().sort((a, b) => b.proj[stat] - a.proj[stat]).slice(0, 150);
   if (!ps.length) { $("list").innerHTML = `<div class="empty">${scope === "today" ? "No matching players on today's slate. Try All players." : "No players found."}</div>`; return; }
   $("list").innerHTML = ps.map((p, i) => {
@@ -104,7 +117,8 @@ fetch("data/app.json?" + Date.now()).then(r => r.json()).then(d => {
   DATA = d;
   const t = new Date(d.updated);
   $("upd").textContent = "Updated " + t.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  $("games").textContent = d.games_today.length ? "Today: " + d.games_today.map(g => `${g.away}@${g.home}`).join("  ") : "No games on today's slate";
+  $("games").textContent = d.games_today.length ? "" : "No games on today's slate";
+  gameChips();
   render();
 }).catch(() => { $("upd").textContent = "No data yet"; $("list").innerHTML = '<div class="empty">No data file found. Run the daily update from the Actions tab.</div>'; });
 
