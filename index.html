@@ -65,6 +65,25 @@
   th:first-child, td:first-child { text-align:left; }
   .hi { color:var(--up); font-weight:700; }
   .lo { color:var(--down); }
+  .addrow { display:flex; align-items:center; gap:8px; margin-top:10px; }
+  .addrow .lbl { font:800 17px var(--disp); color:var(--sc); min-width:38px; }
+  .addrow input { width:78px; background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:8px; font:600 16px var(--body); text-align:center; }
+  .ob { flex:1; border:0; border-radius:8px; padding:9px 6px; font:800 16px var(--disp); letter-spacing:.5px; text-transform:uppercase; color:#08110b; }
+  .ob.over { background:var(--up); } .ob.under { background:var(--down); color:#fff; }
+  #slipfab { position:fixed; right:14px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; background:var(--acc); color:#10151c; border:0; border-radius:999px; padding:12px 18px; font:800 17px var(--disp); letter-spacing:.5px; text-transform:uppercase; box-shadow:0 4px 14px rgba(0,0,0,.4); }
+  #sheet { display:none; position:fixed; inset:0; z-index:30; background:rgba(0,0,0,.55); }
+  #sheet.show { display:block; }
+  .sheetbox { position:absolute; left:0; right:0; bottom:0; max-height:80vh; overflow:auto; background:var(--card); border-top:3px solid var(--acc); border-radius:16px 16px 0 0; padding:14px 14px calc(18px + env(safe-area-inset-bottom)); max-width:760px; margin:0 auto; }
+  .sheetbox h2 { font:800 22px var(--disp); text-transform:uppercase; margin:0 0 8px; letter-spacing:.5px; }
+  .sl { display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line); }
+  .sl .bar { width:5px; align-self:stretch; border-radius:3px; background:var(--tc); }
+  .sl .t { flex:1; min-width:0; } .sl .t b { font:700 18px var(--disp); display:block; }
+  .sl .x { background:none; border:1px solid var(--line); color:var(--mute); border-radius:8px; padding:6px 10px; font-size:14px; }
+  .pill { font:800 15px var(--disp); padding:2px 8px; border-radius:6px; }
+  .pill.O { background:var(--up); color:#08110b; } .pill.U { background:var(--down); color:#fff; }
+  .sbtns { display:flex; gap:8px; margin-top:12px; }
+  .sbtns button { flex:1; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); padding:11px; font:700 16px var(--disp); text-transform:uppercase; }
+  .sbtns button.pri { background:var(--acc); border-color:var(--acc); color:#10151c; }
   .empty { text-align:center; color:var(--mute); padding:40px 10px; }
   .foot { color:var(--mute); font-size:11px; text-align:center; padding:14px 10px; }
 </style>
@@ -91,6 +110,8 @@
   <div id="list"></div>
   <div class="foot">Projection = recent games weighted toward the newest, nudged by today's opponent. Arrow shows projection vs last 10 average. Check injuries yourself.</div>
 </main>
+<button id="slipfab">Slip (0)</button>
+<div id="sheet"><div class="sheetbox" id="sheetbox"></div></div>
 <script>
 const STATS = [["pra","PRA"],["pts","PTS"],["reb","REB"],["ast","AST"],["pr","P+R"],["pa","P+A"],["ra","R+A"]];
 const TEAM = {ATL:"#E03A3E",BOS:"#1F9D55",BKN:"#6B7380",CHA:"#00A3B4",CHI:"#CE1141",CLE:"#A31F4B",DAL:"#0A7BD0",DEN:"#FEC524",DET:"#D6203D",GS:"#1D6FD1",HOU:"#CE1141",IND:"#FDBB30",LAC:"#D6203D",LAL:"#7A45B8",MEM:"#5D76A9",MIA:"#D6264F",MIL:"#2E8B57",MIN:"#2F87C7",NO:"#B5223B",NY:"#F58426",OKC:"#0A8FD6",ORL:"#0A8FD6",PHI:"#1673C4",PHX:"#E56020",POR:"#E03A3E",SAC:"#7B4FB5",SA:"#8A8D8F",TOR:"#CE1141",UTAH:"#F9A01B",WSH:"#E31837"};
@@ -158,9 +179,17 @@ function render() {
     const rows = p.log.map(g => { const v = val(g, stat); return `<tr><td>${g.d} ${g.h ? "vs" : "@"} ${esc(g.opp)}</td><td>${g.min}</td><td>${g.pts}</td><td>${g.reb}</td><td>${g.ast}</td><td class="${v >= p.proj[stat] ? "hi" : "lo"}">${v}</td></tr>`; }).join("");
     return `<div class="card" style="--tc:${c};--tt:${ttxt(c)};--sc:${sc(stat)}"><div class="p"><button class="badge" data-t="${esc(p.team)}">${esc(p.team)}</button><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="meta">${esc(p.pos)} · ${opp} · ${p.min} min</div></div><div class="n"><span class="proj">${p.proj[stat]}</span>${dl}</div><div class="n">${p.l5[stat]}</div><div class="n">${p.l10[stat]}</div></div>
     <div class="det"><div class="meta">Season avg ${p.szn[stat]} over ${p.gp} games. Last 10 (green = at or over projection):</div>
+    <div class="addrow"><span class="lbl">${label}</span><input class="line" type="number" step="0.5" inputmode="decimal" value="${Math.floor(p.proj[stat]) + 0.5}"><button class="ob over" data-pid="${esc(p.id)}" data-side="O">Over</button><button class="ob under" data-pid="${esc(p.id)}" data-side="U">Under</button></div>
     <table><tr><th>Game</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th class="sel">${label}</th></tr>${rows}</table></div></div>`;
   }).join("");
   $("list").querySelectorAll(".p").forEach(el => el.onclick = () => el.parentElement.classList.toggle("open"));
+  $("list").querySelectorAll(".ob").forEach(b => b.onclick = () => {
+    const p = DATA.players.find(x => x.id === b.dataset.pid);
+    const line = parseFloat(b.parentElement.querySelector(".line").value);
+    if (!p || isNaN(line)) return;
+    addToSlip(p, b.dataset.side, line);
+    const old = b.textContent; b.textContent = "Added"; setTimeout(() => { b.textContent = old; }, 900);
+  });
   $("list").querySelectorAll(".badge").forEach(b => b.onclick = e => {
     e.stopPropagation();
     team = team === b.dataset.t ? null : b.dataset.t;
@@ -169,6 +198,35 @@ function render() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 }
+
+let SLIP = [];
+try { SLIP = JSON.parse(store("he-slip") || "[]"); } catch (e) { SLIP = []; }
+function saveSlip() { store("he-slip", JSON.stringify(SLIP)); slipFab(); }
+function slipFab() { $("slipfab").textContent = "Slip (" + SLIP.length + ")"; }
+function addToSlip(p, side, line) {
+  SLIP = SLIP.filter(s => !(s.pid === p.id && s.stat === stat));
+  SLIP.push({ pid: p.id, name: p.name, team: p.team, opp: p.opp, home: p.home, stat, side, line, proj: p.proj[stat] });
+  saveSlip();
+}
+function slipText() {
+  return SLIP.map(s => `${s.name} ${STATS.find(x => x[0] === s.stat)[1]} ${s.side === "O" ? "Over" : "Under"} ${s.line}`).join("\n");
+}
+function openSlip() {
+  const lab = k => STATS.find(x => x[0] === k)[1];
+  $("sheetbox").innerHTML = `<h2>My slip (${SLIP.length})</h2>` + (SLIP.length ? SLIP.map((s, i) => {
+    const c = tcol(s.team);
+    return `<div class="sl" style="--tc:${c}"><div class="bar"></div><div class="t"><b>${esc(s.name)}</b><span class="meta">${esc(s.team)} ${s.opp ? (s.home ? "vs " : "@ ") + esc(s.opp) : ""} · proj ${s.proj}</span></div><span class="pill ${s.side}">${s.side === "O" ? "Over" : "Under"} ${s.line}</span><span class="meta" style="min-width:34px">${lab(s.stat)}</span><button class="x" data-i="${i}">&#10005;</button></div>`;
+  }).join("") : `<div class="empty">Nothing on your slip yet. Tap a player, set a line, then Over or Under.</div>`) +
+    `<div class="sbtns"><button id="scopy" class="pri">Copy slip</button><button id="sclear">Clear</button><button id="sclose">Close</button></div>`;
+  $("sheet").classList.add("show");
+  $("sheetbox").querySelectorAll(".x").forEach(b => b.onclick = () => { SLIP.splice(+b.dataset.i, 1); saveSlip(); openSlip(); });
+  $("sclose").onclick = () => $("sheet").classList.remove("show");
+  $("sclear").onclick = () => { SLIP = []; saveSlip(); openSlip(); };
+  $("scopy").onclick = () => { try { navigator.clipboard.writeText(slipText()); $("scopy").textContent = "Copied"; } catch (e) { $("scopy").textContent = "Can't copy"; } };
+}
+$("slipfab").onclick = openSlip;
+$("sheet").onclick = e => { if (e.target.id === "sheet") $("sheet").classList.remove("show"); };
+slipFab();
 
 fetch("data/app.json?" + Date.now()).then(r => r.json()).then(d => {
   d.games_today.sort((a, b) => new Date(a.time) - new Date(b.time));
