@@ -1,0 +1,27 @@
+name: Daily NBA data update
+
+on:
+  schedule:
+    - cron: "0 9 * * *"   # 9:00 UTC = 4 AM Eastern, after last night's games finish
+  workflow_dispatch:       # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pull data and build projections
+        run: python scripts/update.py
+      - name: Save changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "Daily data update"
+          git push

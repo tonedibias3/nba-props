@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hardwood Edge</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --line:#2a313c; --text:#e6edf3; --mute:#8b949e; --acc:#f5a623; --up:#3fb950; --down:#f85149; }
+  [data-theme="light"] { --bg:#f6f7f9; --card:#fff; --line:#d8dde3; --text:#1b1f24; --mute:#667085; --acc:#c77700; --up:#1a7f37; --down:#cf222e; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif; padding-bottom:40px; }
+  header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:10px 14px 8px; padding-top:calc(10px + env(safe-area-inset-top)); }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  h1 { font-size:18px; margin:0; letter-spacing:.3px; }
+  h1 span { color:var(--acc); }
+  .sub { color:var(--mute); font-size:12px; }
+  button.theme { background:none; border:1px solid var(--line); color:var(--text); border-radius:8px; padding:5px 9px; font-size:13px; }
+  .chips { display:flex; gap:6px; overflow-x:auto; padding:8px 0 2px; scrollbar-width:none; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { flex:0 0 auto; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:999px; padding:6px 13px; font-size:14px; font-weight:600; }
+  .chip.on { background:var(--acc); border-color:var(--acc); color:#111; }
+  .row2 { display:flex; gap:8px; margin-top:6px; }
+  input[type=search] { flex:1; min-width:0; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px 11px; font-size:16px; }
+  select { background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px; font-size:15px; }
+  main { padding:8px 10px; max-width:760px; margin:0 auto; }
+  .games { color:var(--mute); font-size:12px; padding:4px 4px 8px; }
+  .head, .p { display:grid; grid-template-columns: 1fr 52px 56px 50px 50px; gap:4px; align-items:center; }
+  .head { color:var(--mute); font-size:11px; text-transform:uppercase; padding:4px 10px; }
+  .head div:not(:first-child), .p .n { text-align:right; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; margin-bottom:6px; overflow:hidden; }
+  .p { padding:9px 10px; cursor:pointer; }
+  .nm { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta { color:var(--mute); font-size:12px; font-weight:400; }
+  .proj { color:var(--acc); font-weight:800; font-size:17px; }
+  .n { font-variant-numeric:tabular-nums; }
+  .det { display:none; padding:2px 10px 10px; border-top:1px solid var(--line); }
+  .card.open .det { display:block; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; font-variant-numeric:tabular-nums; }
+  th { color:var(--mute); font-weight:500; text-align:right; padding:3px 4px; font-size:11px; text-transform:uppercase; }
+  td { text-align:right; padding:4px; border-top:1px solid var(--line); }
+  th:first-child, td:first-child { text-align:left; }
+  .hi { color:var(--up); font-weight:700; }
+  .lo { color:var(--down); }
+  .empty { text-align:center; color:var(--mute); padding:40px 10px; }
+  .foot { color:var(--mute); font-size:11px; text-align:center; padding:14px 10px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div><h1>Hardwood <span>Edge</span></h1><div class="sub" id="upd">Loading...</div></div>
+    <button class="theme" id="theme">Light</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="row2">
+    <input type="search" id="q" placeholder="Search player or team">
+    <select id="scope"><option value="today">Playing today</option><option value="all">All players</option></select>
+  </div>
+</header>
+<main>
+  <div class="games" id="games"></div>
+  <div class="head"><div>Player</div><div>Min</div><div id="hProj">Proj</div><div>L5</div><div>L10</div></div>
+  <div id="list"></div>
+  <div class="foot">Projection = recent games weighted toward the newest, nudged by today's opponent. Check injuries yourself.</div>
+</main>
+<script>
+const STATS = [["pra","PRA"],["pts","PTS"],["reb","REB"],["ast","AST"],["pr","P+R"],["pa","P+A"],["ra","R+A"]];
+let DATA = null, stat = "pra";
+const $ = id => document.getElementById(id);
+
+function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} }
+function setTheme(t) { document.documentElement.dataset.theme = t; $("theme").textContent = t === "dark" ? "Light" : "Dark"; store("he-theme", t); }
+setTheme(store("he-theme") || "dark");
+$("theme").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+stat = store("he-stat") || "pra";
+$("scope").value = store("he-scope") || "today";
+
+function chips() {
+  $("chips").innerHTML = STATS.map(([k, l]) => `<button class="chip ${k === stat ? "on" : ""}" data-k="${k}">${l}</button>`).join("");
+  $("chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { stat = b.dataset.k; store("he-stat", stat); chips(); render(); });
+}
+const val = (g, k) => k === "pr" ? g.pts + g.reb : k === "pa" ? g.pts + g.ast : k === "ra" ? g.reb + g.ast : k === "pra" ? g.pts + g.reb + g.ast : g[k];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function render() {
+  if (!DATA) return;
+  const q = $("q").value.trim().toLowerCase(), scope = $("scope").value;
+  store("he-scope", scope);
+  $("hProj").textContent = "Proj " + STATS.find(s => s[0] === stat)[1];
+  let ps = DATA.players.filter(p => (scope === "all" || p.opp) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
+  ps = ps.slice().sort((a, b) => b.proj[stat] - a.proj[stat]).slice(0, 150);
+  if (!ps.length) { $("list").innerHTML = `<div class="empty">${scope === "today" ? "No matching players on today's slate. Try All players." : "No players found."}</div>`; return; }
+  $("list").innerHTML = ps.map((p, i) => {
+    const opp = p.opp ? `${p.home ? "vs" : "@"} ${p.opp}` : "no game";
+    const rows = p.log.map(g => { const v = val(g, stat); return `<tr><td>${g.d} ${g.h ? "vs" : "@"} ${g.opp}</td><td>${g.min}</td><td>${g.pts}</td><td>${g.reb}</td><td>${g.ast}</td><td class="${v >= p.proj[stat] ? "hi" : "lo"}">${v}</td></tr>`; }).join("");
+    return `<div class="card" data-i="${i}"><div class="p"><div><div class="nm">${esc(p.name)}</div><div class="meta">${esc(p.team)} ${esc(p.pos)} · ${opp}</div></div><div class="n">${p.min}</div><div class="n proj">${p.proj[stat]}</div><div class="n">${p.l5[stat]}</div><div class="n">${p.l10[stat]}</div></div>
+    <div class="det"><div class="meta">Season avg ${p.szn[stat]} over ${p.gp} games. Last 10 (green = at or over projection):</div>
+    <table><tr><th>Game</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th>${STATS.find(s => s[0] === stat)[1]}</th></tr>${rows}</table></div></div>`;
+  }).join("");
+  $("list").querySelectorAll(".p").forEach(el => el.onclick = () => el.parentElement.classList.toggle("open"));
+}
+
+fetch("data/app.json?" + Date.now()).then(r => r.json()).then(d => {
+  DATA = d;
+  const t = new Date(d.updated);
+  $("upd").textContent = "Updated " + t.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  $("games").textContent = d.games_today.length ? "Today: " + d.games_today.map(g => `${g.away}@${g.home}`).join("  ") : "No games on today's slate";
+  render();
+}).catch(() => { $("upd").textContent = "No data yet"; $("list").innerHTML = '<div class="empty">No data file found. Run the daily update from the Actions tab.</div>'; });
+
+chips();
+$("q").oninput = render;
+$("scope").onchange = render;
+</script>
+</body>
+</html>
