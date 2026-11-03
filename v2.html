@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hardwood Edge</title>
+<!-- Redesigned with the unslop skill by Damir Sokolovsky (@heydamir), CC BY 4.0: https://github.com/heydamir/unslop -->
+<style>
+  @font-face { font-family:"Geist"; src:url("fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight:100 900; font-display:swap; }
+  @font-face { font-family:"Geist Mono"; src:url("fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight:100 900; font-display:swap; }
+  :root {
+    --deep:#0f0f10; --bg:#141415; --card:#19191b; --raised:#232325;
+    --line:rgba(237,237,237,.08); --t1:#ededed; --t2:#a1a1a6; --t3:#85858b;
+    --acc:#e8a13a; --acc-ink:#141415; --acc-text:#e8a13a;
+    --pos:#4cc38a; --neg:#e5484d; --hl:inset 0 1px 0 rgba(255,255,255,.08);
+    --btn:#ededed; --btn-ink:#141415;
+    --sans:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  [data-theme="light"] {
+    --deep:#ffffff; --bg:#fafafa; --card:#ffffff; --raised:#f4f4f5;
+    --line:rgba(23,23,23,.08); --t1:#171717; --t2:#525252; --t3:#737373;
+    --acc:#b45309; --acc-ink:#ffffff; --acc-text:#b45309;
+    --pos:#16a34a; --neg:#dc2626; --hl:none;
+    --btn:#171717; --btn-ink:#ffffff;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--t1); font:400 15px/22px var(--sans); padding-bottom:88px; font-variant-numeric:tabular-nums; }
+  button, input, select { font-family:inherit; color:inherit; }
+  button { cursor:pointer; transition:color .15s var(--ease), background-color .15s var(--ease), border-color .15s var(--ease), opacity .15s var(--ease), transform .15s var(--ease); }
+  button:active { transform:scale(.98); }
+  :focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+
+  header { background:var(--deep); border-bottom:1px solid var(--line); padding:16px 16px 12px; padding-top:calc(16px + env(safe-area-inset-top)); }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  h1 { font:500 18px/20px var(--sans); margin:0; letter-spacing:0; }
+  .sub { color:var(--t3); font:400 12px/16px var(--mono); margin-top:4px; }
+  .theme { height:32px; padding:0 12px; background:var(--raised); border:1px solid var(--line); border-radius:8px; font:500 13px/16px var(--sans); color:var(--t2); }
+  .row2 { display:flex; gap:8px; margin-top:16px; }
+  input[type=search] { flex:1; min-width:0; height:40px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:0 12px; font:400 16px/24px var(--sans); }
+  input::placeholder { color:var(--t3); }
+  select { height:40px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:0 8px; font:400 15px/20px var(--sans); }
+
+  .chips { display:flex; gap:8px; overflow-x:auto; padding:12px 0 0; scrollbar-width:none; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { flex:0 0 auto; height:32px; padding:0 12px; background:var(--card); border:1px solid var(--line); border-radius:8px; font:500 13px/16px var(--sans); color:var(--t2); }
+  .chip.on { background:var(--acc); border-color:var(--acc); color:var(--acc-ink); }
+  .chip.g { position:relative; height:52px; padding:8px 12px 0; text-align:left; overflow:hidden; color:var(--t1); font:500 14px/16px var(--sans); border-radius:8px; }
+  .chip.g::before { content:""; position:absolute; left:0; right:0; top:0; height:4px; background:linear-gradient(90deg,var(--a) 50%,var(--b) 50%); }
+  .chip.g small { display:block; margin-top:4px; font:400 12px/16px var(--mono); color:var(--t3); }
+  .chip.g.on { background:var(--raised); border-color:var(--acc); color:var(--t1); box-shadow:var(--hl); }
+  .chip.t.on { background:var(--c); border-color:var(--c); color:var(--tt); }
+
+  .statbar { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:0 16px; }
+  .statbar .chips { padding:12px 0 8px; }
+  .statbar .chip.s { font:500 13px/16px var(--mono); }
+  .head, .p { display:grid; grid-template-columns:32px minmax(0,1fr) 52px 40px 40px; gap:8px; align-items:center; }
+  .head { color:var(--t3); font:400 12px/16px var(--sans); padding:0 12px 8px; margin:0 -4px; }
+  .head div:nth-child(n+3), .p .n { text-align:right; }
+  main { padding:12px 16px; max-width:760px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:8px; overflow:hidden; box-shadow:var(--hl); }
+  .p { padding:12px; cursor:pointer; min-height:56px; }
+  .badge { width:32px; height:32px; border-radius:6px; background:var(--tc); color:var(--tt); border:0; padding:0; font:500 11px/12px var(--mono); }
+  .nm { font:500 15px/20px var(--sans); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta { color:var(--t3); font:400 13px/20px var(--sans); }
+  .n { font:400 13px/16px var(--mono); color:var(--t2); }
+  .n .proj { display:block; font:500 20px/24px var(--mono); color:var(--acc-text); }
+  .dl { display:block; font:400 12px/16px var(--mono); }
+  .dl.u { color:var(--pos); } .dl.d { color:var(--neg); }
+
+  .det { display:none; padding:0 12px 12px; border-top:1px solid var(--line); }
+  .card.open .det { display:block; }
+  .det .meta { padding-top:12px; }
+  .addrow { display:flex; align-items:center; gap:8px; margin-top:12px; }
+  .addrow .lbl { font:500 13px/16px var(--mono); color:var(--t2); min-width:36px; }
+  .addrow input { width:88px; height:40px; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:0 8px; font:500 16px/24px var(--mono); text-align:center; }
+  .ob { flex:1; height:40px; background:var(--raised); border:1px solid var(--line); border-radius:8px; font:500 14px/16px var(--sans); box-shadow:var(--hl); }
+  table { width:100%; border-collapse:collapse; font:400 13px/16px var(--mono); margin-top:16px; }
+  th { color:var(--t3); font:400 12px/16px var(--sans); text-align:right; padding:0 4px 8px; }
+  th.sel { color:var(--acc-text); }
+  td { text-align:right; padding:8px 4px; border-top:1px solid var(--line); color:var(--t2); }
+  th:first-child, td:first-child { text-align:left; }
+  td.hi { color:var(--pos); } td.lo { color:var(--neg); }
+  .empty { text-align:center; color:var(--t3); padding:40px 16px; }
+  .foot { color:var(--t3); font:400 12px/16px var(--sans); padding:16px 4px; max-width:46ch; margin:0 auto; text-align:center; }
+
+  #slipfab { position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:20; height:44px; padding:0 20px; background:var(--btn); color:var(--btn-ink); border:0; border-radius:12px; font:500 14px/16px var(--sans); box-shadow:0 8px 24px rgba(0,0,0,.24); }
+  #sheet { display:none; position:fixed; inset:0; z-index:30; background:rgba(0,0,0,.5); }
+  #sheet.show { display:block; }
+  .sheetbox { position:absolute; left:0; right:0; bottom:0; max-height:80vh; overflow:auto; background:var(--card); border-top:1px solid var(--line); border-radius:16px 16px 0 0; padding:20px 16px calc(20px + env(safe-area-inset-bottom)); max-width:760px; margin:0 auto; }
+  .sheetbox h2 { font:500 18px/24px var(--sans); margin:0 0 12px; }
+  .sl { display:flex; align-items:center; gap:12px; min-height:56px; border-top:1px solid var(--line); }
+  .sl .badge { flex:0 0 auto; }
+  .sl .t { flex:1; min-width:0; } .sl .t b { font:500 15px/20px var(--sans); display:block; }
+  .sl .pick { font:500 14px/16px var(--mono); text-align:right; }
+  .sl .pick small { display:block; font:400 12px/16px var(--mono); color:var(--t3); }
+  .sl .x { width:32px; height:32px; background:none; border:1px solid var(--line); color:var(--t3); border-radius:8px; font-size:14px; padding:0; }
+  .sbtns { display:flex; gap:8px; margin-top:16px; }
+  .sbtns button { flex:1; height:44px; border-radius:8px; border:1px solid var(--line); background:var(--raised); font:500 14px/16px var(--sans); }
+  .sbtns button.pri { background:var(--btn); border-color:var(--btn); color:var(--btn-ink); }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div><h1>Hardwood Edge</h1><div class="sub" id="upd">Loading</div></div>
+    <button class="theme" id="theme">Light</button>
+  </div>
+  <div class="row2">
+    <input type="search" id="q" placeholder="Search" aria-label="Search players or teams">
+    <select id="scope" aria-label="Player pool"><option value="today">Playing today</option><option value="all">All players</option></select>
+  </div>
+  <div class="chips" id="gchips"></div>
+  <div class="chips" id="tchips"></div>
+  <div class="sub" id="games"></div>
+</header>
+<div class="statbar">
+  <div class="chips" id="chips"></div>
+  <div class="head"><div></div><div>Player</div><div>Proj</div><div>L5</div><div>L10</div></div>
+</div>
+<main>
+  <div id="list"></div>
+  <p class="foot">Projection weights recent games toward the newest and adjusts for tonight's opponent. The small figure under it compares it with the last 10 average. Check injuries yourself.</p>
+</main>
+<button id="slipfab">Slip 0</button>
+<div id="sheet"><div class="sheetbox" id="sheetbox"></div></div>
+<script>
+const STATS = [["pra","PRA"],["pts","PTS"],["reb","REB"],["ast","AST"],["pr","P+R"],["pa","P+A"],["ra","R+A"]];
+const TEAM = {ATL:"#E03A3E",BOS:"#1F9D55",BKN:"#6B7380",CHA:"#00A3B4",CHI:"#CE1141",CLE:"#A31F4B",DAL:"#0A7BD0",DEN:"#FEC524",DET:"#D6203D",GS:"#1D6FD1",HOU:"#CE1141",IND:"#FDBB30",LAC:"#D6203D",LAL:"#7A45B8",MEM:"#5D76A9",MIA:"#D6264F",MIL:"#2E8B57",MIN:"#2F87C7",NO:"#B5223B",NY:"#F58426",OKC:"#0A8FD6",ORL:"#0A8FD6",PHI:"#1673C4",PHX:"#E56020",POR:"#E03A3E",SAC:"#7B4FB5",SA:"#8A8D8F",TOR:"#CE1141",UTAH:"#F9A01B",WSH:"#E31837"};
+const ALIAS = {GSW:"GS",NYK:"NY",NOP:"NO",SAS:"SA",WAS:"WSH",UTA:"UTAH",PHO:"PHX",BRK:"BKN",CHO:"CHA"};
+const tcol = t => TEAM[t] || TEAM[ALIAS[t]] || "#64748b";
+const ttxt = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? "#10151c" : "#ffffff"; };
+let DATA = null, stat = "pra", game = "all", team = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const f1 = n => Number(n).toFixed(1);
+const lab = k => STATS.find(x => x[0] === k)[1];
+
+function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} }
+function setTheme(t) { document.documentElement.dataset.theme = t; $("theme").textContent = t === "dark" ? "Light" : "Dark"; store("he-theme", t); }
+setTheme(store("he-theme") || "dark");
+$("theme").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+stat = store("he-stat") || "pra";
+$("scope").value = store("he-scope") || "today";
+
+function statChips() {
+  $("chips").innerHTML = STATS.map(([k, l]) => `<button class="chip s ${k === stat ? "on" : ""}" data-k="${k}">${l}</button>`).join("");
+  $("chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { stat = b.dataset.k; store("he-stat", stat); statChips(); render(); });
+}
+
+function gameChips() {
+  const gs = DATA.games_today;
+  const tm = g => { const d = new Date(g.time); return isNaN(d) ? "" : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); };
+  $("gchips").style.display = gs.length ? "flex" : "none";
+  $("gchips").innerHTML = `<button class="chip g ${game === "all" ? "on" : ""}" style="--a:var(--t3);--b:var(--t3)" data-g="all">All games<small>${gs.length} today</small></button>` +
+    gs.map((g, i) => `<button class="chip g ${game === i ? "on" : ""}" style="--a:${tcol(g.away)};--b:${tcol(g.home)}" data-g="${i}">${esc(g.away)} @ ${esc(g.home)}<small>${tm(g)}</small></button>`).join("");
+  $("gchips").querySelectorAll(".chip").forEach(b => b.onclick = () => { game = b.dataset.g === "all" ? "all" : +b.dataset.g; team = null; gameChips(); teamChips(); render(); });
+}
+
+function teamChips() {
+  const el = $("tchips");
+  const tchip = (code, on, label) => { const c = code ? tcol(code) : "var(--acc)"; const tt = code ? ttxt(tcol(code)) : "var(--acc-ink)"; return `<button class="chip t ${on ? "on" : ""}" style="--c:${c};--tt:${tt}" data-t="${code || ""}">${label}</button>`; };
+  if (game !== "all") {
+    const g = DATA.games_today[game];
+    el.style.display = "flex";
+    el.innerHTML = tchip("", !team, "Both teams") + tchip(g.away, team === g.away, esc(g.away)) + tchip(g.home, team === g.home, esc(g.home));
+  } else if (team) {
+    el.style.display = "flex";
+    el.innerHTML = tchip(team, true, esc(team) + " &#10005;");
+  } else { el.style.display = "none"; el.innerHTML = ""; return; }
+  el.querySelectorAll(".chip").forEach(b => b.onclick = () => { team = b.dataset.t && b.dataset.t !== team ? b.dataset.t : null; teamChips(); render(); });
+}
+
+const val = (g, k) => k === "pr" ? g.pts + g.reb : k === "pa" ? g.pts + g.ast : k === "ra" ? g.reb + g.ast : k === "pra" ? g.pts + g.reb + g.ast : g[k];
+
+function render() {
+  if (!DATA) return;
+  const q = $("q").value.trim().toLowerCase(), scope = $("scope").value;
+  store("he-scope", scope);
+  const label = lab(stat);
+  const gm = game === "all" ? null : DATA.games_today[game];
+  let ps = DATA.players.filter(p =>
+    (!gm || p.team === gm.home || p.team === gm.away) && (!team || p.team === team) &&
+    (scope === "all" || p.opp) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
+  ps = ps.slice().sort((a, b) => b.proj[stat] - a.proj[stat]).slice(0, 150);
+  if (!ps.length) { $("list").innerHTML = `<div class="empty">${scope === "today" ? "No matching players on today's slate. Try All players" : "No players found"}</div>`; return; }
+  $("list").innerHTML = ps.map(p => {
+    const c = tcol(p.team), opp = p.opp ? `${p.home ? "vs" : "@"} ${esc(p.opp)}` : "no game";
+    const d = p.proj[stat] - p.l10[stat];
+    const dl = Math.abs(d) >= 0.3 ? `<span class="dl ${d > 0 ? "u" : "d"}">${d > 0 ? "+" : "−"}${Math.abs(d).toFixed(1)}</span>` : "";
+    const rows = p.log.map(g => { const v = val(g, stat); return `<tr><td>${g.d} ${g.h ? "vs" : "@"} ${esc(g.opp)}</td><td>${g.min}</td><td>${g.pts}</td><td>${g.reb}</td><td>${g.ast}</td><td class="${v >= p.proj[stat] ? "hi" : "lo"}">${v}</td></tr>`; }).join("");
+    return `<div class="card" style="--tc:${c};--tt:${ttxt(c)}"><div class="p"><button class="badge" data-t="${esc(p.team)}" aria-label="Filter ${esc(p.team)}">${esc(p.team)}</button><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="meta">${esc(p.pos)} · ${opp} · ${Math.round(p.min)} min</div></div><div class="n"><span class="proj">${f1(p.proj[stat])}</span>${dl}</div><div class="n">${f1(p.l5[stat])}</div><div class="n">${f1(p.l10[stat])}</div></div>
+    <div class="det"><div class="meta">Season average ${f1(p.szn[stat])} over ${p.gp} games</div>
+    <div class="addrow"><span class="lbl">${label}</span><input class="line" type="number" step="0.5" inputmode="decimal" value="${f1(Math.floor(p.proj[stat]) + 0.5)}" aria-label="Line"><button class="ob" data-pid="${esc(p.id)}" data-side="O">Over</button><button class="ob" data-pid="${esc(p.id)}" data-side="U">Under</button></div>
+    <table><tr><th>Last 10</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th class="sel">${label}</th></tr>${rows}</table></div></div>`;
+  }).join("");
+  $("list").querySelectorAll(".p").forEach(el => el.onclick = () => el.parentElement.classList.toggle("open"));
+  $("list").querySelectorAll(".ob").forEach(b => b.onclick = () => {
+    const p = DATA.players.find(x => x.id === b.dataset.pid);
+    const line = parseFloat(b.parentElement.querySelector(".line").value);
+    if (!p || isNaN(line)) return;
+    addToSlip(p, b.dataset.side, line);
+    const old = b.textContent; b.textContent = "Added"; setTimeout(() => { b.textContent = old; }, 900);
+  });
+  $("list").querySelectorAll(".badge").forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    team = team === b.dataset.t ? null : b.dataset.t;
+    if (gm && team && team !== gm.home && team !== gm.away) game = "all";
+    gameChips(); teamChips(); render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
+let SLIP = [];
+try { SLIP = JSON.parse(store("he-slip") || "[]"); } catch (e) { SLIP = []; }
+function saveSlip() { store("he-slip", JSON.stringify(SLIP)); slipFab(); }
+function slipFab() { $("slipfab").textContent = "Slip " + SLIP.length; }
+function addToSlip(p, side, line) {
+  SLIP = SLIP.filter(s => !(s.pid === p.id && s.stat === stat));
+  SLIP.push({ pid: p.id, name: p.name, team: p.team, opp: p.opp, home: p.home, stat, side, line, proj: p.proj[stat] });
+  saveSlip();
+}
+function slipText() { return SLIP.map(s => `${s.name} ${lab(s.stat)} ${s.side === "O" ? "Over" : "Under"} ${s.line}`).join("\n"); }
+function openSlip() {
+  $("sheetbox").innerHTML = `<h2>My slip</h2>` + (SLIP.length ? SLIP.map((s, i) => {
+    const c = tcol(s.team);
+    return `<div class="sl" style="--tc:${c};--tt:${ttxt(c)}"><span class="badge" style="display:flex;align-items:center;justify-content:center">${esc(s.team)}</span><div class="t"><b>${esc(s.name)}</b><span class="meta">${s.opp ? (s.home ? "vs " : "@ ") + esc(s.opp) + " · " : ""}proj ${f1(s.proj)}</span></div><div class="pick">${s.side === "O" ? "Over" : "Under"} ${f1(s.line)}<small>${lab(s.stat)}</small></div><button class="x" data-i="${i}" aria-label="Remove">&#10005;</button></div>`;
+  }).join("") : `<div class="empty">Nothing on your slip yet. Tap a player, set a line, then choose Over or Under</div>`) +
+    `<div class="sbtns"><button id="scopy" class="pri">Copy slip</button><button id="sclear">Clear</button><button id="sclose">Close</button></div>`;
+  $("sheet").classList.add("show");
+  $("sheetbox").querySelectorAll(".x").forEach(b => b.onclick = () => { SLIP.splice(+b.dataset.i, 1); saveSlip(); openSlip(); });
+  $("sclose").onclick = () => $("sheet").classList.remove("show");
+  $("sclear").onclick = () => { SLIP = []; saveSlip(); openSlip(); };
+  $("scopy").onclick = () => { try { navigator.clipboard.writeText(slipText()); $("scopy").textContent = "Copied"; } catch (e) { $("scopy").textContent = "Can't copy"; } };
+}
+$("slipfab").onclick = openSlip;
+$("sheet").onclick = e => { if (e.target.id === "sheet") $("sheet").classList.remove("show"); };
+slipFab();
+
+fetch("data/app.json?" + Date.now()).then(r => r.json()).then(d => {
+  d.games_today.sort((a, b) => new Date(a.time) - new Date(b.time));
+  DATA = d;
+  const t = new Date(d.updated);
+  $("upd").textContent = "Updated " + t.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  $("games").textContent = d.games_today.length ? "" : "No games on today's slate";
+  gameChips(); teamChips(); render();
+}).catch(() => { $("upd").textContent = "No data yet"; $("list").innerHTML = '<div class="empty">No data file found. Run the daily update from the Actions tab</div>'; });
+
+statChips();
+$("q").oninput = render;
+$("scope").onchange = render;
+</script>
+</body>
+</html>
