@@ -108,8 +108,9 @@
   </div>
   <div class="row2">
     <input type="search" id="q" placeholder="Search" aria-label="Search players or teams">
-    <select id="scope" aria-label="Player pool"><option value="today">Playing today</option><option value="all">All players</option></select>
+    <select id="scope" aria-label="Player pool"><option value="today">On slate</option><option value="all">All players</option></select>
   </div>
+  <div class="chips" id="dchips"></div>
   <div class="chips" id="gchips"></div>
   <div class="chips" id="tchips"></div>
   <div class="sub" id="games"></div>
@@ -131,6 +132,22 @@ const ALIAS = {GSW:"GS",NYK:"NY",NOP:"NO",SAS:"SA",WAS:"WSH",UTA:"UTAH",PHO:"PHX
 const tcol = t => TEAM[t] || TEAM[ALIAS[t]] || "#64748b";
 const ttxt = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? "#10151c" : "#ffffff"; };
 let DATA = null, stat = "pra", game = "all", team = null;
+let day = null;
+const gamesOn = () => DATA.schedule.filter(g => g.date === day);
+const eff = p => { const v = p.d && p.d[day]; return v ? { ...p, opp: v.opp, home: v.home, proj: v.proj } : { ...p, opp: null, home: null }; };
+function dayLabel(iso) {
+  const diff = Math.round((new Date(iso + "T12:00:00") - new Date(DATA.date + "T12:00:00")) / 864e5);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  return new Date(iso + "T12:00:00").toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+}
+function dayChips() {
+  const dates = [...new Set(DATA.schedule.map(g => g.date))].sort();
+  const el = $("dchips");
+  el.style.display = dates.length > 1 || (dates.length === 1 && dates[0] !== DATA.date) ? "flex" : "none";
+  el.innerHTML = dates.map(d => `<button class="chip ${d === day ? "on" : ""}" data-d="${d}">${dayLabel(d)}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(b => b.onclick = () => { day = b.dataset.d; game = "all"; team = null; dayChips(); gameChips(); teamChips(); render(); });
+}
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const f1 = n => Number(n).toFixed(1);
@@ -149,10 +166,10 @@ function statChips() {
 }
 
 function gameChips() {
-  const gs = DATA.games_today;
+  const gs = gamesOn();
   const tm = g => { const d = new Date(g.time); return isNaN(d) ? "" : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); };
   $("gchips").style.display = gs.length ? "flex" : "none";
-  $("gchips").innerHTML = `<button class="chip g ${game === "all" ? "on" : ""}" style="--a:var(--t3);--b:var(--t3)" data-g="all">All games<small>${gs.length} today</small></button>` +
+  $("gchips").innerHTML = `<button class="chip g ${game === "all" ? "on" : ""}" style="--a:var(--t3);--b:var(--t3)" data-g="all">All games<small>${gs.length} games</small></button>` +
     gs.map((g, i) => `<button class="chip g ${game === i ? "on" : ""}" style="--a:${tcol(g.away)};--b:${tcol(g.home)}" data-g="${i}">${esc(g.away)} @ ${esc(g.home)}<small>${tm(g)}</small></button>`).join("");
   $("gchips").querySelectorAll(".chip").forEach(b => b.onclick = () => { game = b.dataset.g === "all" ? "all" : +b.dataset.g; team = null; gameChips(); teamChips(); render(); });
 }
@@ -161,7 +178,7 @@ function teamChips() {
   const el = $("tchips");
   const tchip = (code, on, label) => { const c = code ? tcol(code) : "var(--acc)"; const tt = code ? ttxt(tcol(code)) : "var(--acc-ink)"; return `<button class="chip t ${on ? "on" : ""}" style="--c:${c};--tt:${tt}" data-t="${code || ""}">${label}</button>`; };
   if (game !== "all") {
-    const g = DATA.games_today[game];
+    const g = gamesOn()[game];
     el.style.display = "flex";
     el.innerHTML = tchip("", !team, "Both teams") + tchip(g.away, team === g.away, esc(g.away)) + tchip(g.home, team === g.home, esc(g.home));
   } else if (team) {
@@ -178,12 +195,12 @@ function render() {
   const q = $("q").value.trim().toLowerCase(), scope = $("scope").value;
   store("he-scope", scope);
   const label = lab(stat);
-  const gm = game === "all" ? null : DATA.games_today[game];
-  let ps = DATA.players.filter(p =>
+  const gm = game === "all" ? null : gamesOn()[game];
+  let ps = DATA.players.map(eff).filter(p =>
     (!gm || p.team === gm.home || p.team === gm.away) && (!team || p.team === team) &&
     (scope === "all" || p.opp) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
   ps = ps.slice().sort((a, b) => b.proj[stat] - a.proj[stat]).slice(0, 150);
-  if (!ps.length) { $("list").innerHTML = `<div class="empty">${scope === "today" ? "No matching players on today's slate. Try All players" : "No players found"}</div>`; return; }
+  if (!ps.length) { $("list").innerHTML = `<div class="empty">${scope === "today" ? "No matching players on this slate. Try All players" : "No players found"}</div>`; return; }
   $("list").innerHTML = ps.map(p => {
     const c = tcol(p.team), opp = p.opp ? `${p.home ? "vs" : "@"} ${esc(p.opp)}` : "no game";
     const d = p.proj[stat] - p.l10[stat];
@@ -196,7 +213,7 @@ function render() {
   }).join("");
   $("list").querySelectorAll(".p").forEach(el => el.onclick = () => el.parentElement.classList.toggle("open"));
   $("list").querySelectorAll(".ob").forEach(b => b.onclick = () => {
-    const p = DATA.players.find(x => x.id === b.dataset.pid);
+    const p0 = DATA.players.find(x => x.id === b.dataset.pid), p = p0 && eff(p0);
     const line = parseFloat(b.parentElement.querySelector(".line").value);
     if (!p || isNaN(line)) return;
     addToSlip(p, b.dataset.side, line);
@@ -238,12 +255,16 @@ $("sheet").onclick = e => { if (e.target.id === "sheet") $("sheet").classList.re
 slipFab();
 
 fetch("data/app.json?" + Date.now()).then(r => r.json()).then(d => {
-  d.games_today.sort((a, b) => new Date(a.time) - new Date(b.time));
+  if (!d.schedule) d.schedule = (d.games_today || []).map(g => ({ ...g, date: d.date }));
+  d.schedule.sort((a, b) => a.date.localeCompare(b.date) || new Date(a.time) - new Date(b.time));
+  d.players.forEach(p => { if (!p.d) p.d = p.opp ? { [d.date]: { opp: p.opp, home: p.home, proj: p.proj } } : {}; });
+  const nextUp = d.schedule.find(g => g.state !== "post");
+  day = nextUp ? nextUp.date : (d.schedule.length ? d.schedule[0].date : d.date);
   DATA = d;
   const t = new Date(d.updated);
   $("upd").textContent = "Updated " + t.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  $("games").textContent = d.games_today.length ? "" : "No games on today's slate";
-  gameChips(); teamChips(); render();
+  $("games").textContent = !d.schedule.length ? "No games scheduled in the next few days" : (day !== d.date ? "No games today" : "");
+  dayChips(); gameChips(); teamChips(); render();
 }).catch(() => { $("upd").textContent = "No data yet"; $("list").innerHTML = '<div class="empty">No data file found. Run the daily update from the Actions tab</div>'; });
 
 statChips();

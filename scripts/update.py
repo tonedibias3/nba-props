@@ -20,6 +20,7 @@ APP_FILE = "data/app.json"
 STATS = ["pts", "reb", "ast"]
 DECAY = 0.88        # newer games count more
 MIN_MINUTES = 8     # ignore blowout garbage-time / DNP-ish lines
+SCHED_DAYS = 4      # today plus the next 3 days
 OPP_DAMPEN = 0.5    # how much the opponent factor is allowed to move a number
 
 
@@ -114,14 +115,22 @@ def fetch_new_games(games, today):
     return games
 
 
-def todays_schedule(today):
+def upcoming_schedule(today):
+    """Games for today plus the next few days, each tagged with its date."""
     sched = []
-    for ev in scoreboard(today):
-        if not is_regular(ev):
+    for i in range(SCHED_DAYS):
+        day = today + dt.timedelta(days=i)
+        try:
+            events = scoreboard(day)
+        except Exception as e:
+            print("no schedule for", day, e)
             continue
-        tm = teams_of(ev)
-        sched.append({"home": tm.get("home"), "away": tm.get("away"),
-                      "time": ev.get("date"), "state": ev["status"]["type"].get("state")})
+        for ev in events:
+            if not is_regular(ev):
+                continue
+            tm = teams_of(ev)
+            sched.append({"date": day.isoformat(), "home": tm.get("home"), "away": tm.get("away"),
+                          "time": ev.get("date"), "state": ev["status"]["type"].get("state")})
     return sched
 
 
@@ -168,10 +177,10 @@ def build_app(games, schedule, today):
             logs[p["id"]].append({**p, "date": g["date"], "opp": opp,
                                   "home": p["team"] == g["home"]})
     factors = opp_factors(games)
-    today_map = {}
-    for s in schedule:
-        today_map[s["home"]] = (s["away"], True)
-        today_map[s["away"]] = (s["home"], False)
+    by_team = defaultdict(list)  # team -> [(date, opp, home)] in date order
+    for s in sorted(schedule, key=lambda x: (x["date"], x.get("time") or "")):
+        by_team[s["home"]].append((s["date"], s["away"], True))
+        by_team[s["away"]].append((s["date"], s["home"], False))
 
     players = []
     for pid, rows in logs.items():  # rows are newest first
@@ -186,16 +195,28 @@ def build_app(games, schedule, today):
         base = {s: sum(r[s] * wi for r, wi in zip(use, w)) / wsum for s in STATS}
         proj_min = sum(r["min"] * wi for r, wi in zip(use, w)) / wsum
         team = newest["team"]
-        opp, home = today_map.get(team, (None, None))
-        if opp and opp in factors:
-            for s in STATS:
-                f = factors[opp][s]
-                base[s] *= 1 + (f - 1) * OPP_DAMPEN
+        # one projection per upcoming game, adjusted for that opponent
+        per_day = {}
+        for date, o, h in by_team.get(team, []):
+            if date in per_day:
+                continue
+            adj = dict(base)
+            if o in factors:
+                for s in STATS:
+                    adj[s] *= 1 + (factors[o][s] - 1) * OPP_DAMPEN
+            per_day[date] = {"opp": o, "home": h, "proj": r1(combos(adj))}
+        first = per_day[min(per_day)] if per_day else None
+        opp, home = (first["opp"], first["home"]) if first else (None, None)
+        if first:
+            base_out = first["proj"]
+        else:
+            base_out = r1(combos(base))
         players.append({
             "id": pid, "name": newest["name"], "pos": newest["pos"], "team": team,
             "gp": len(rows), "min": round(proj_min, 1),
             "opp": opp, "home": home,
-            "proj": r1(combos(base)),
+            "d": per_day,
+            "proj": base_out,
             "l5": r1(combos({s: avg(rows[:5], s) for s in STATS})),
             "l10": r1(combos({s: avg(rows[:10], s) for s in STATS})),
             "szn": r1(combos({s: avg(rows, s) for s in STATS})),
@@ -204,7 +225,9 @@ def build_app(games, schedule, today):
         })
     players.sort(key=lambda p: -p["proj"]["pra"])
     return {"updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
-            "date": today.isoformat(), "games_today": schedule, "players": players}
+            "date": today.isoformat(), "schedule": schedule,
+            "games_today": [g for g in schedule if g["date"] == today.isoformat()],
+            "players": players}
 
 
 def main():
@@ -216,7 +239,7 @@ def main():
             games = json.load(f)
     games = fetch_new_games(games, today)
     try:
-        schedule = todays_schedule(today)
+        schedule = upcoming_schedule(today)
     except Exception as e:
         print("no schedule", e)
         schedule = []
@@ -226,7 +249,7 @@ def main():
     with open(APP_FILE, "w") as f:
         json.dump(app, f, separators=(",", ":"))
     print(f"{len(games['games'])} games stored, {len(app['players'])} players, "
-          f"{len(schedule)} games today")
+          f"{len(schedule)} games in the next {SCHED_DAYS} days")
     if not games["games"]:
         print("WARNING: no games found. Check the season start date or ESPN access.")
         sys.exit(1)
