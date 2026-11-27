@@ -133,18 +133,20 @@ const tcol = t => TEAM[t] || TEAM[ALIAS[t]] || "#64748b";
 const ttxt = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? "#10151c" : "#ffffff"; };
 let DATA = null, stat = "pra", game = "all", team = null;
 let day = null;
+const todayISO = () => new Date().toLocaleDateString("en-CA");
 const gamesOn = () => DATA.schedule.filter(g => g.date === day);
 const eff = p => { const v = p.d && p.d[day]; return v ? { ...p, opp: v.opp, home: v.home, proj: v.proj } : { ...p, opp: null, home: null }; };
 function dayLabel(iso) {
-  const diff = Math.round((new Date(iso + "T12:00:00") - new Date(DATA.date + "T12:00:00")) / 864e5);
+  const diff = Math.round((new Date(iso + "T12:00:00") - new Date(todayISO() + "T12:00:00")) / 864e5);
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   return new Date(iso + "T12:00:00").toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 }
 function dayChips() {
-  const dates = [...new Set(DATA.schedule.map(g => g.date))].sort();
+  const all = [...new Set(DATA.schedule.map(g => g.date))].sort();
+  const dates = all.filter(d => d >= todayISO()).length ? all.filter(d => d >= todayISO()) : all;
   const el = $("dchips");
-  el.style.display = dates.length > 1 || (dates.length === 1 && dates[0] !== DATA.date) ? "flex" : "none";
+  el.style.display = dates.length > 1 || (dates.length === 1 && dates[0] !== todayISO()) ? "flex" : "none";
   el.innerHTML = dates.map(d => `<button class="chip ${d === day ? "on" : ""}" data-d="${d}">${dayLabel(d)}</button>`).join("");
   el.querySelectorAll(".chip").forEach(b => b.onclick = () => { day = b.dataset.d; game = "all"; team = null; dayChips(); gameChips(); teamChips(); render(); });
 }
@@ -258,12 +260,13 @@ fetch("data/app.json?" + Date.now()).then(r => r.json()).then(d => {
   if (!d.schedule) d.schedule = (d.games_today || []).map(g => ({ ...g, date: d.date }));
   d.schedule.sort((a, b) => a.date.localeCompare(b.date) || new Date(a.time) - new Date(b.time));
   d.players.forEach(p => { if (!p.d) p.d = p.opp ? { [d.date]: { opp: p.opp, home: p.home, proj: p.proj } } : {}; });
-  const nextUp = d.schedule.find(g => g.state !== "post");
+  const fresh = d.schedule.filter(g => g.date >= todayISO());
+  const nextUp = fresh.find(g => g.state !== "post") || fresh[0];
   day = nextUp ? nextUp.date : (d.schedule.length ? d.schedule[0].date : d.date);
   DATA = d;
   const t = new Date(d.updated);
   $("upd").textContent = "Updated " + t.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  $("games").textContent = !d.schedule.length ? "No games scheduled in the next few days" : (day !== d.date ? "No games today" : "");
+  $("games").textContent = !d.schedule.length ? "No games scheduled in the next few days" : (day !== todayISO() ? "No games today" : "");
   dayChips(); gameChips(); teamChips(); render();
 }).catch(() => { $("upd").textContent = "No data yet"; $("list").innerHTML = '<div class="empty">No data file found. Run the daily update from the Actions tab</div>'; });
 

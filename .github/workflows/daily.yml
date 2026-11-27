@@ -3,6 +3,7 @@ name: Daily NBA data update
 on:
   schedule:
     - cron: "0 9 * * *"   # 9:00 UTC = 4 AM Eastern, after last night's games finish
+    - cron: "0 14 * * *"  # second run, GitHub often starts scheduled jobs late
   workflow_dispatch:       # lets you run it by hand from the Actions tab
 
 permissions:
