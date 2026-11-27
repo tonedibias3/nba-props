@@ -179,6 +179,19 @@ function teamChips() {
 
 const val = (g, k) => k === "pr" ? g.pts + g.reb : k === "pa" ? g.pts + g.ast : k === "ra" ? g.reb + g.ast : k === "pra" ? g.pts + g.reb + g.ast : g[k];
 
+function paintCard(card) {
+  const line = parseFloat(card.querySelector(".line").value);
+  let over = 0, n = 0;
+  card.querySelectorAll("td.v").forEach(td => {
+    const v = +td.dataset.v; n++;
+    if (isNaN(line) || v === line) td.className = "v";
+    else if (v > line) { over++; td.className = "v hi"; }
+    else td.className = "v lo";
+  });
+  const h = card.querySelector(".hits");
+  if (h) h.textContent = isNaN(line) ? "" : `Over ${over} of ${n} at ${line}`;
+}
+
 function render() {
   if (!DATA) return;
   const q = $("q").value.trim().toLowerCase(), scope = $("scope").value;
@@ -195,12 +208,13 @@ function render() {
     const c = tcol(p.team), opp = p.opp ? `${p.home ? "vs" : "@"} ${esc(p.opp)}` : "no game";
     const d = p.proj[stat] - p.l10[stat];
     const dl = Math.abs(d) >= 0.3 ? `<span class="dl ${d > 0 ? "u" : "d"}">${d > 0 ? "&#9650;" : "&#9660;"} ${Math.abs(d).toFixed(1)}</span>` : "";
-    const rows = p.log.map(g => { const v = val(g, stat); return `<tr><td>${g.d} ${g.h ? "vs" : "@"} ${esc(g.opp)}</td><td>${g.min}</td><td>${g.pts}</td><td>${g.reb}</td><td>${g.ast}</td><td class="${v >= p.proj[stat] ? "hi" : "lo"}">${v}</td></tr>`; }).join("");
+    const rows = p.log.map(g => { const v = val(g, stat); return `<tr><td>${g.d} ${g.h ? "vs" : "@"} ${esc(g.opp)}</td><td>${g.min}</td><td>${g.pts}</td><td>${g.reb}</td><td>${g.ast}</td><td class="v" data-v="${v}">${v}</td></tr>`; }).join("");
     return `<div class="card" style="--tc:${c};--tt:${ttxt(c)};--sc:${sc(stat)}"><div class="p"><button class="badge" data-t="${esc(p.team)}">${esc(p.team)}</button><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="meta">${esc(p.pos)} · ${opp} · ${p.min} min</div></div><div class="n"><span class="proj">${p.proj[stat]}</span>${dl}</div><div class="n">${p.l5[stat]}</div><div class="n">${p.l10[stat]}</div></div>
-    <div class="det"><div class="meta">Season avg ${p.szn[stat]} over ${p.gp} games. Last 10 (green = at or over projection):</div>
+    <div class="det"><div class="meta">Season avg ${p.szn[stat]} over ${p.gp} games. Last 10, green = over your line:</div>
     <div class="addrow"><span class="lbl">${label}</span><input class="line" type="number" step="0.5" inputmode="decimal" value="${Math.floor(p.proj[stat]) + 0.5}"><button class="ob over" data-pid="${esc(p.id)}" data-side="O">Over</button><button class="ob under" data-pid="${esc(p.id)}" data-side="U">Under</button></div>
-    <table><tr><th>Game</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th class="sel">${label}</th></tr>${rows}</table></div></div>`;
+    <div class="meta hits" style="padding-top:8px"></div><table><tr><th>Game</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th class="sel">${label}</th></tr>${rows}</table></div></div>`;
   }).join("");
+  $("list").querySelectorAll(".card").forEach(c => { paintCard(c); c.querySelector(".line").addEventListener("input", () => paintCard(c)); });
   $("list").querySelectorAll(".p").forEach(el => el.onclick = () => el.parentElement.classList.toggle("open"));
   $("list").querySelectorAll(".ob").forEach(b => b.onclick = () => {
     const p0 = DATA.players.find(x => x.id === b.dataset.pid), p = p0 && eff(p0);
